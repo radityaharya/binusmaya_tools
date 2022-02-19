@@ -144,10 +144,7 @@ for i in range(len(classSessionDetails)):
 
     allDayEvent = "False"
 
-    if (
-        classSessionDetails[i]["joinUrl"] == ""
-        or classSessionDetails[i]["joinUrl"] == None
-    ):
+    if classSessionDetails[i]["joinUrl"] in ("", None):
         url = (
             "https://newbinusmaya.binus.ac.id/lms/course/"
             + classSessionDetails[i]["classId"]

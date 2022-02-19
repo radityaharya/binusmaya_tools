@@ -58,7 +58,7 @@ for i in range(len(data)):
         "%Y-%m-%dT%H:%M:%S"
     )
 
-    if data[i]["joinUrl"] == "" or data[i]["joinUrl"] == None:
+    if data[i]["joinUrl"] in ("", None):
         url = (
             "https://newbinusmaya.binus.ac.id/lms/course/"
             + data[i]["classId"]
