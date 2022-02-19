@@ -141,8 +141,8 @@ def getNextClass():
             > datetime.datetime.now()
         ):
             return schedule[i]["customParam"]["classSessionId"]
-    else:
-        raise Exception("No next class")
+        
+    raise Exception("No next class")
 
 
 def getNextClass2():
