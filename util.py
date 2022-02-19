@@ -18,8 +18,7 @@ def getClassComponentList(period):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 # class component id = LAB,LEC,TUT
@@ -31,8 +30,7 @@ def getClassComponent(period, classComponentId):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getClassSession(classId):
@@ -40,8 +38,7 @@ def getClassSession(classId):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getClassAttendance(classId):
@@ -49,8 +46,7 @@ def getClassAttendance(classId):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getSessionDetail(classSessionId):
@@ -61,8 +57,7 @@ def getSessionDetail(classSessionId):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 # forum
@@ -73,8 +68,7 @@ def getForum(classId):
     response = requests.get(url, headers=HEADERS)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getForumTotalPost(classId, forumId):
@@ -83,8 +77,7 @@ def getForumTotalPost(classId, forumId):
     response = requests.post(url, headers=HEADERS, data=forumId)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getForumThread(classId, sessionId):
@@ -93,8 +86,7 @@ def getForumThread(classId, sessionId):
     response = requests.post(url, headers=HEADERS, data=data)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getForumComment(threadId, forumId):
@@ -109,8 +101,7 @@ def getForumComment(threadId, forumId):
     response = requests.post(url, headers=HEADERS, data=json_object)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getScheduleMonth(date):
@@ -126,8 +117,7 @@ def getScheduleMonth(date):
 
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 def getScheduleDate(date):
     if isinstance(date, str):
@@ -140,8 +130,7 @@ def getScheduleDate(date):
     response = requests.post(url, headers=HEADERS, data=json_object)
     if response.status_code == 200:
         return response.json()
-    else:
-        raise Exception(response.status_code)
+    raise Exception(response.status_code)
 
 
 def getNextClass():
