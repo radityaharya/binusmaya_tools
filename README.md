@@ -32,7 +32,7 @@ academicCareer = " "
 ```
 
 - Run `schedule_fetcher.py`
-- Import `gcal_... .csv` to Google Calendar
+- [Import](https://support.google.com/calendar/answer/37118) `gcal_... .csv` to Google Calendar
 
 **Uploading directly to Google Calendar:**
 
