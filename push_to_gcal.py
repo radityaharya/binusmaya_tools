@@ -92,8 +92,9 @@ for i in range(len(data)):
     # 11	Tomato  	#d60000
 
     color = ""
-    if data[i]["course"][0:7] == "Advance":
+    if "coursename" in data[i]["course"]:
         color = "5"
+    #add your other courses here
     else:
         color = "2"
 

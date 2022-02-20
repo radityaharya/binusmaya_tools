@@ -1,11 +1,8 @@
 import datetime
 from datetime import datetime
 import json
-import time
 from notion_client import Client
 from dotenv import load_dotenv
-import util
-from tqdm import tqdm
 import os
 
 load_dotenv()
@@ -35,7 +32,7 @@ for block in results:
 with open("classSessionDetails.json") as f:
     data = json.load(f)
 
-for i in tqdm(range(len(data))):
+for i in range(len(data)):
     startDateTime = data[i]["dateStart"]
     startDateTime = datetime.strptime(startDateTime, "%Y-%m-%dT%H:%M:%S").strftime(
         "%Y-%m-%dT%H:%M:%S.%f+07:00"
@@ -108,7 +105,7 @@ for i in tqdm(range(len(data))):
                 "name": course,
             },
         },
-        "PPT": {"type": "url", "url": util.urlshorter(pptLink)},
+        "PPT": {"type": "url", "url": pptLink},
         "Session": {"type": "number", "number": int(sessionNumber)},
         "Class": {
             "type": "select",

@@ -8,9 +8,34 @@ import requests
 from dateutil import parser
 import re
 
-BASE_URL = "https://apim-bm7-prod.azure-api.net"
-HEADERS = {}
+institution = " "
+roleId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Authorization = "Bearer xxxxxxxxxxxxxxxxxx"
+rOId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+academicCareer = " "
 
+
+BASE_URL = "https://apim-bm7-prod.azure-api.net"
+HEADERS = {    "Connection": "keep-alive",
+    "Pragma": "no-cache",
+    "Cache-Control": "no-cache",
+    "institution": institution,
+    "roleId": roleId,
+    "sec-ch-ua-mobile": "?0",
+    "Authorization": Authorization,
+    "Content-Type": "application/json",
+    "Accept": "application/json, text/plain, */*",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+    "academicCareer": academicCareer,
+    "roleName": "Student",
+    "sec-ch-ua-platform": "Windows",
+    "Origin": "https://newbinusmaya.binus.ac.id",
+    "Sec-Fetch-Site": "cross-site",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+    "Referer": "https://newbinusmaya.binus.ac.id/",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",}
 PAYLOAD = "{ }"
 
 
@@ -250,7 +275,6 @@ def toGcalCSV(classSessionDetails):
             url = classSessionDetails[i]["joinUrl"]
 
         Description = f"{url}\n\nSession: {classSessionDetails[i]['sessionNumber']}\n\n"
-        # prefix subtopic with " - " and sufix with newline
         for j in range(len(classSessionDetails[i]["courseSubtopic"])):
             Description += " - " + classSessionDetails[i]["courseSubtopic"][j] + "\n"
 
