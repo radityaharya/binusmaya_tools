@@ -7,8 +7,12 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from util import make_json
+import os
+import dotenv
 
-CAL_ID = "xxxxxxxx@group.calendar.google.com"
+dotenv.load_dotenv()
+
+CAL_ID = os.getenv("CAL_ID")
 #or "primary" pr "your_gmail@gmail.com"
 
 
