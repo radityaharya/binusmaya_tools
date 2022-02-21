@@ -7,7 +7,7 @@ This project also allows you to download powerpoint files from all of your class
 ## Usage
 
 Install requirements by running
-```sh
+```
 pip install -r requirements
 ```
 
