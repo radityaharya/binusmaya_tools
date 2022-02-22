@@ -1,5 +1,5 @@
 import json
-from util import resourceDownloader
+from util import resourceDownloader, getResource
 
 
 # load classSessionDetailsRaw.json
@@ -12,7 +12,8 @@ for i in range(len(classSessionDetails)):
             courseName = classSessionDetails[i]["course"]
             session = classSessionDetails[i]["sessionNumber"]
             topic = classSessionDetails[i]["topic"]
-            url = classSessionDetails[i]["resouceIds"][j]["url"]
+            url = getResource(classSessionDetails[i]["resouceIds"][j]["resourceId"])
+            url = url['url']
             classTitle = classSessionDetails[i]["classTitle"]
             print(f"Downloading {courseName} {session} {topic}")
             resourceDownloader(classTitle,courseName,session,topic,url)
