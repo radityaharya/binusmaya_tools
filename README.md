@@ -4,6 +4,9 @@ Python project that helps you to fetch your class schedule from BinusMaya and ex
 
 This project also allows you to download powerpoint files from all of your classes.
 
+a web interface is available at:
+[https://sunib.otid.site/tool](https://sunib.otid.site/tool)
+
 ## Usage
 
 Install requirements by running
