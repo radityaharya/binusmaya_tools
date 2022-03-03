@@ -21,14 +21,12 @@ pip install -r requirements
 - Select item from the Activity Log
 - Open the “Headers” tab
 - View source on “Request Headers”
-- Copy the values to `util.py`
+- Copy the values to `.env`
 
 ```python
-institution = " "
-roleId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-Authorization = "Bearer xxxxxxxxxxxxxxxxxx..."
-rOId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-academicCareer = " "
+ROLEID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+TOKEN = "xxxxxxxxxxxxxxxxxx..." 
+# without "Bearer .."
 ```
 
 - Run `schedule_fetcher.py`

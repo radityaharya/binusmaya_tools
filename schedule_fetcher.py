@@ -1,64 +1,61 @@
+import datetime
+import os
 import time
+from simplejson import load
+from tqdm import tqdm
 import util
+import bimay
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-PERIOD="2120"
+def fetch_schedule():
+    classSessionDetails = []
+    bm = bimay.bimay(token=os.getenv("TOKEN"), roleId=os.getenv("ROLEID"))
+    academicPeriod = bm.get_latest_academicPeriod()
+    termBeginDate = datetime.datetime.strptime(
+        academicPeriod["termBeginDate"], "%Y-%m-%dT%H:%M:%S"
+    )
+    termEndDate = datetime.datetime.strptime(
+        academicPeriod["termEndDate"], "%Y-%m-%dT%H:%M:%S"
+    )
+    print("start date: " + str(termBeginDate))
+    print("end date: " + str(termEndDate))
 
-classSessionDetails = []
-classSessionDetailsRaw = []
+    print("this may take a while...")
+    schedules = bm.get_schedule_month(termBeginDate, termEndDate)
+    print(len(schedules["Schedule"]))
+    for i in tqdm(range(len(schedules["Schedule"]))):
+        time.sleep(0.5)
+        classSessionId = schedules["Schedule"][i]["customParam"]["classSessionId"]
+        detail = bm.get_class_session_detail(classSessionId)
+        courseSubTopic = []
+        for subtopic in range(len(detail["courseSubTopic"])):
+            courseSubTopic.append(detail["courseSubTopic"][subtopic])
+        classSessionDetails.append(
+            {
+                "course": schedules["Schedule"][i]["content"],
+                "classTitle": schedules["Schedule"][i]["title"],
+                "topic": detail["topic"],
+                "meetingStart": detail["meetingStart"],
+                "meetingEnd": detail["meetingEnd"],
+                "sessionNumber": detail["sessionNumber"],
+                "dateStart": detail["dateStart"],
+                "dateEnd": detail["dateEnd"],
+                "deliveryMode": detail["deliveryMode"],
+                "courseSubtopic": courseSubTopic,
+                "joinUrl": detail["joinUrl"],
+                "classId": schedules["Schedule"][i]["customParam"]["classId"],
+                "classSessionId": classSessionId,
+                "resourceId": detail["resources"],
+            }
+        )
+    return classSessionDetails
 
-class_actuall = []
-for i in ["LEC", "LAB", "TUT"]:
-    time.sleep(3)
-    classes = util.getClassComponent(PERIOD, classComponentId=i)
-    for a in range(len(classes)):
-        courseName = classes[a]["courseName"]
-        classId = classes[a]["classId"]
-        classType = classes[a]["ssrComponent"]
-        classCode = classes[a]["classCode"]
-        class_actual = util.getClassSession(classId)
-        class_actuall.append(class_actual)
-        for b in range(100):
-            try:
-                classSessionId = class_actual["sessions"][b]["id"]
-                # time.sleep(1)
-                detail = util.getSessionDetail(classSessionId)
-                topic = detail["topic"]
-                print(topic)
-                meetingStart = detail["meetingStart"]
-                meetingEnd = detail["meetingEnd"]
-                sessionNumber = detail["sessionNumber"]
-                startDate = detail["dateStart"]
-                dateEnd = detail["dateEnd"]
-                deliveryMode = detail["deliveryMode"]
-                joinUrl = detail["joinUrl"]
-                resIds = detail["resources"]
-                courseSubTopic = []
-                for subtopic in range(len(detail["courseSubTopic"])):
-                    courseSubTopic.append(detail["courseSubTopic"][subtopic])
-                classSessionDetailsRaw.append(detail)
-                classSessionDetails.append(
-                    {
-                        "course": courseName,
-                        "classTitle": f"{classCode} - {classType}",
-                        "topic": topic,
-                        "meetingStart": meetingStart,
-                        "meetingEnd": meetingEnd,
-                        "sessionNumber": sessionNumber,
-                        "dateStart": startDate,
-                        "dateEnd": dateEnd,
-                        "deliveryMode": deliveryMode,
-                        "courseSubtopic": courseSubTopic,
-                        "joinUrl": joinUrl,
-                        "classId": classId,
-                        "classSessionId": classSessionId,
-                        "resourceId": resIds
-                    }
-                )
-            except:
-                pass
 
-util.make_json("classSessionDetails.json", classSessionDetails)
-util.make_json("classSessionDetailsRaw.json", classSessionDetailsRaw)
+if __name__ == "__main__":
+    classSessionDetails = fetch_schedule()
+    util.make_json("classSessionDetails.json", classSessionDetails)
 
-util.toGcalCSV(classSessionDetails)
+    util.toGcalCSV(classSessionDetails)
