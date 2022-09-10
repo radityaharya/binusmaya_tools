@@ -1,10 +1,9 @@
 import datetime
 import os
 import time
-from simplejson import load
 from tqdm import tqdm
 import util
-import bimay
+from binusmaya import bimay
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,6 +29,8 @@ def fetch_schedule():
         time.sleep(0.5)
         classSessionId = schedules["Schedule"][i]["customParam"]["classSessionId"]
         detail = bm.get_class_session_detail(classSessionId)
+        if detail == None:
+            continue
         courseSubTopic = []
         for subtopic in range(len(detail["courseSubTopic"])):
             courseSubTopic.append(detail["courseSubTopic"][subtopic])
@@ -49,6 +50,9 @@ def fetch_schedule():
                 "classId": schedules["Schedule"][i]["customParam"]["classId"],
                 "classSessionId": classSessionId,
                 "resourceId": detail["resources"],
+                "deliveryMode": schedules["Schedule"][i]["deliveryMode"],
+                "location": schedules["Schedule"][i]["location"],
+                "scheduleType": schedules["Schedule"][i]["scheduleType"],
             }
         )
     return classSessionDetails

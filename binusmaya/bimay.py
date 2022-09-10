@@ -1,9 +1,16 @@
-import string
+import logging
 import requests
-import time
 import datetime
-import json
-from dateutil.relativedelta import relativedelta
+from binusmaya.modules import academic_period, schedules, resources, classes, forums
+
+logger = logging.getLogger("binusmaya")
+
+# logger to binusmaya.log
+logger.setLevel(logging.DEBUG)  
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('binusmaya.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 class bimay:
     """
@@ -106,7 +113,7 @@ class bimay:
         self.schedule_base_url = "https://func-bm7-schedule-prod.azurewebsites.net"
         self.r = requests.Session()
 
-    def __get_data(self, url, json_data=None, params=None, headers=None) -> dict:
+    def get_data(self, url, json_data=None, params=None, headers=None) -> dict:
         """
         Description
         ----------
@@ -131,12 +138,17 @@ class bimay:
             headers = self.headers
         response = self.r.get(url, params=params, json=json_data, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            try:
+                return response.json()
+            except:
+                return response.text
         if response.status_code == 204:
-            raise Exception("No Content")
-        raise Exception(response.status_code, response.text)
+            logger.debug({"status": response.status_code,"text": response.text, "json_data": json_data, "params": params, "headers": headers, "url": url})
+            return None
+        logger.debug({"status": response.status_code,"text": response.text, "json_data": json_data, "params": params, "headers": headers, "url": url})
+        return None
 
-    def __post_data(self, url, json_data=None, params=None, headers=None) -> dict:
+    def post_data(self, url, json_data=None, params=None, headers=None) -> dict:
         """
         Description
         ----------
@@ -157,14 +169,20 @@ class bimay:
         -------
         response.json()
         """
+        # print(f"POST {url}")
         if headers is None:
             headers = self.headers
         response = self.r.post(url, params=params, json=json_data, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            try:
+                return response.json()
+            except:
+                return response.text
         if response.status_code == 204:
-            raise Exception("No Content")
-        raise Exception(response.status_code, response.text)
+            logger.debug({"status": response.status_code,"text": response.text, "json_data": json_data, "params": params, "headers": headers, "url": url})
+            return None
+        logger.debug({"status": response.status_code,"text": response.text, "json_data": json_data, "params": params, "headers": headers, "url": url})
+        return None
 
     def get_latest_academicPeriod(self) -> dict:
         """
@@ -181,22 +199,55 @@ class bimay:
         academicPeriod : dict
             academicPeriod from BinusMaya
         """
-        response = self.r.get(
-            f"{self.base_url}/func-bm7-course-prod/AcademicPeriod/Student",
-            headers=self.headers,
-        )
-        if response.status_code == 200:
-            for academicPeriod in response.json():
-                startDate = datetime.datetime.strptime(
-                    academicPeriod["termBeginDate"], "%Y-%m-%dT%H:%M:%S"
-                )
-                endDate = datetime.datetime.strptime(
-                    academicPeriod["termEndDate"], "%Y-%m-%dT%H:%M:%S"
-                )
-                if startDate <= datetime.datetime.now() <= endDate:
-                    break
-            return academicPeriod
-        raise Exception(response.text)
+        return academic_period.get_latest_academicPeriod(self)
+    
+    def get_latest_academic_start_end_date(self) -> tuple:
+        """
+        Description
+        ----------
+        fetches latest academicPeriod from BinusMaya
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        start_date : datetime.datetime
+            academicPeriod start date from BinusMaya
+        end_date : datetime.datetime
+            academicPeriod end date from BinusMaya
+        """
+        return academic_period.get_latest_academic_start_end_date(self)
+
+    def get_schedule(
+        self, date_start: datetime.datetime, end_date: datetime.datetime = None
+    ) -> dict:
+        """
+        Description
+        ----------
+        fetches schedule from BinusMaya
+
+        Parameters
+        ----------
+        date_start : datetime.datetime mandatory
+            start date of schedule
+
+        end_date : datetime.datetime mandatory
+            end date of schedule
+
+        Returns
+        -------
+        schedule : dict
+            schedule from BinusMaya
+        """
+        if end_date is not None:
+            if (end_date - date_start).days > 30:
+                return self.get_schedule_month(date_start, end_date)
+            else:
+                return self.get_schedule_date(date_start, end_date)
+        else:
+            return self.get_schedule_date(date_start)
 
     def get_schedule_date(
         self, date_start: datetime.datetime, date_end: datetime.datetime = None
@@ -219,30 +270,8 @@ class bimay:
         schedule : dict
             schedule from BinusMaya
         """
+        return schedules.get_schedule_date(self, date_start, date_end)
 
-        def fetch_schedule(date):
-            return self.__post_data(
-                "{}/api/schedule/Date-v1/{}".format(
-                    self.schedule_base_url, date.strftime("%Y-%-m-%-d")
-                ),
-                json_data={},
-            )
-
-        if date_end is None:
-            return fetch_schedule(date=date_start)["Schedule"]
-        else:
-            schedules = []
-            for date in (
-                date_start + datetime.timedelta(days=x)
-                for x in range(0, (date_end - date_start).days)
-            ):
-                for i in range(len(fetch_schedule(date)["Schedule"])):
-                    schedules.append(fetch_schedule(date)["Schedule"][i])
-            first_date_start = min(schedules, key=lambda x: x["dateStart"])["dateStart"]
-            data = {"dateStart": first_date_start, "Schedule": schedules}
-            return data
-
-    # dispose this? feels redundant
     def get_schedule_month(
         self, month_start: datetime.datetime, month_end: datetime.datetime = None
     ) -> dict:
@@ -253,54 +282,21 @@ class bimay:
 
         Parameters
         ----------
-        date : datetime.datetime mandatory
-            date to get schedule from
+        month_start : datetime.datetime mandatory
+            month_start to get schedule from
+
+        month_end : datetime.datetime optional
+            month_end to get schedule from
 
         Returns
         -------
         schedule : dict
             schedule from BinusMaya
         """
-
-        def fetch_schedule(month):
-            rawschedules = self.__post_data(
-                "{}/api/schedule/Month-v1/{}".format(
-                    self.schedule_base_url, month.strftime("%Y-%-m-1")
-                ),
-                json_data={},
-            )
-            first_date_start = min(rawschedules, key=lambda x: x["dateStart"])[
-                "dateStart"
-            ]
-            schedules = []
-
-            for i in range(len(rawschedules)):
-                for j in range(len(rawschedules[i]["Schedule"])):
-                    schedules.append(rawschedules[i]["Schedule"][j])
-            data = {"dateStart": first_date_start, "Schedule": schedules}
-            return data
-
-        if month_end is None:
-            return fetch_schedule(month=month_start)
-        else:
-            schedules = []
-            
-            months = (month_end.year - month_start.year) * 12 + month_end.month - month_start.month
-            
-            #get schedule for each month between month_start and month_end
-            for i in range(months + 1):
-                month = month_start + relativedelta(months=i)
-                for j in range(len(fetch_schedule(month)["Schedule"])):
-                    schedules.append(fetch_schedule(month)["Schedule"][j])
-                    
-            first_date_start = min(schedules, key=lambda x: x["dateStart"])[
-                "dateStart"
-            ]
-            data = {"dateStart": first_date_start, "Schedule": schedules}
-            return data
+        return schedules.get_schedule_month(self, month_start, month_end)
 
     # --ClassComponent-- #
-    def get_class_component_list(self, period: int = None) -> dict:
+    def get_class_component_list(self, period: int = None) -> list:
         """
         Description
         ----------
@@ -316,18 +312,12 @@ class bimay:
         classComponentList : list
             class component list from BinusMaya
         """
-        if period is None:
-            period = self.get_latest_academicPeriod()["academicPeriod"]
-        else:
-            period = str(period)
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/Course/Period/{period}/ClassComponentList/Student"
-        )
+        return classes.get_class_component_list(self, period)
 
     # --classes-- #
     def get_class_from_component(
         self, period: int = None, classComponentId: str = None
-    ) -> dict:
+    ) -> list:
         """
         Description
         ----------
@@ -346,15 +336,9 @@ class bimay:
         class : dict
             class from BinusMaya
         """
-        if period is None:
-            period = self.get_latest_academicPeriod()["academicPeriod"]
-        else:
-            period = str(period)
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/Course/Period/{period}/Component/{classComponentId}/Student"
-        )
+        return classes.get_class_from_component(self, period, classComponentId)
 
-    def get_class_active(self) -> dict:
+    def get_class_active(self) -> list:
         """
         Description
         ----------
@@ -369,12 +353,10 @@ class bimay:
         class : dict
             current attended classes from BinusMaya
         """
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/Class/Active/Student"
-        )
+        return classes.get_class_active(self)
 
     # --classSessions-- #
-    def __default_classSessionId(self) -> str:
+    def default_classSessionId(self) -> str:
         """
         Description
         ----------
@@ -389,16 +371,25 @@ class bimay:
         classSessionId : str
             default classSessionId from ongoing(if any) class or upcoming(if any) class
         """
-        ongoing = self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/ClassSession/Ongoing/student"
-        )
-        upcoming = self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/ClassSession/Upcoming/student"
-        )
-        if ongoing.get("isHasUpcomingClass") is True:
-            return upcoming["id"]
-        return ongoing["id"]
+        return classes.default_classSessionId(self)
 
+    def default_classId(self) -> str:
+        """
+        Description
+        ----------
+        an internal function to get default classId
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        classId : str
+            default classId from ongoing(if any) class or upcoming(if any) class
+        """
+        return classes.default_classId(self)
+    
     def get_class_sessions_from_class_id(self, classId: str) -> dict:
         """
         Description
@@ -415,9 +406,7 @@ class bimay:
         classSessions : dict
             class sessions from BinusMaya
         """
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/ClassSession/Class/{classId}/Student"
-        )
+        return classes.get_class_sessions_from_class_id(self, classId)
 
     def get_class_session_detail(self, classSessionId: str = None) -> dict:
         """
@@ -435,11 +424,7 @@ class bimay:
         classSessionDetail : dict
             class session detail from BinusMaya
         """
-        if classSessionId is None:
-            classSessionId = self.__default_classSessionId()
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/ClassSession/Session/{classSessionId}/Resource/Student"
-        )
+        return classes.get_class_session_detail(self, classSessionId)
 
     # --resource-- #
     def get_resource_from_resource_id(self, resourceId: str = None) -> dict:
@@ -458,9 +443,7 @@ class bimay:
         resource : dict
             resource from BinusMaya (if any)
         """
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/ClassSession/Session/Resource/{resourceId}"
-        )
+        return resources.get_resource_from_resource_id(self, resourceId)
 
     def get_ppt_from_session_id(self, classSessionId: str = None) -> dict:
         """
@@ -480,22 +463,25 @@ class bimay:
             ppt link from BinusMaya (if any)
         """
 
-        def get_source_url(self, resourceId: str) -> str:
-            """
-            -args: resourceId
-            """
-            url = self.get_resource_from_resource_id(resourceId)["url"]
-            if not url.startswith("https://stbm7resourcesprod.blob.core.windows.net"):
-                raise Exception("Invalid url")
-            response = self.r.get(url)
-            if response.status_code == 200:
-                return response.headers["x-ms-copy-source"]
-            raise Exception(response.text)
+        return resources.get_ppt_from_session_id(self, classSessionId)
 
-        resources = self.get_class_session_detail(classSessionId)["resources"]
-        for i in range(len(resources)):
-            if resources[i]["resourceType"] == "Document":
-                return get_source_url(resources[i]["id"])
+    def post_student_progress(self, resourceId: str) -> dict:
+        """
+        Description
+        ----------
+        post resource student progress to BinusMaya
+
+        Parameters
+        ----------
+        resourceId : str
+            resourceId to post student progress to
+
+        Returns
+        -------
+        progress : dict
+            progress information from BinusMaya
+        """
+        return resources.post_student_progress(self, resourceId)
 
     # --forum-- #
     def get_forum_latest(self, classId: str = None) -> dict:
@@ -514,16 +500,7 @@ class bimay:
         forum : dict
             forum information from BinusMaya (if any)
         """
-        if classId is None:
-            return self.__post_data(
-                f"{self.base_url}/func-bm7-forum-prod/Forum/LatestPostForum",
-                json_data=self.get_class_active(),
-            )
-        else:
-            return self.__post_data(
-                f"{self.base_url}/func-bm7-forum-prod/Forum/LatestPostForum",
-                json_data=[{"classId": classId}],
-            )
+        return forums.get_forum_latest(self, classId)
 
     def get_forum_from_class_id(self, classId: str = None) -> dict:
         """
@@ -541,9 +518,7 @@ class bimay:
         forum : dict
             forum information from BinusMaya (if any)
         """
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-course-prod/Forum/Class/{classId}/Student"
-        )
+        return forums.get_forum_from_class_id(self, classId)
 
     def get_forum_thread(self, classId: str = None, sessionId: str = None) -> dict:
         """
@@ -561,12 +536,7 @@ class bimay:
         forum : dict
             forum information from BinusMaya (if any)
         """
-        if classId is None:
-            classId = self.__default_classId()
-        return self.__post_data(
-            f"{self.base_url}/func-bm7-forum-prod/Thread/Class/{classId}/Session/{sessionId}/Paging/1",
-            json_data={"TotalDataPerPage": 100},
-        )
+        return forums.get_forum_thread(self, classId, sessionId)
 
     def get_forum_thread_content(
         self, classId: str = None, threadId: str = None
@@ -589,13 +559,7 @@ class bimay:
         forum : dict
             forum information from BinusMaya
         """
-        if classId is None and threadId is None:
-            classId = self.get_forum_latest()["latestPost"][0]["classId"]
-            threadId = self.get_forum_latest()["latestPost"][0]["threadId"]
-        return self.__get_data(
-            f"{self.base_url}/func-bm7-forum-prod/Forum/{classId}/Thread/{threadId}",
-            params={"originMultiClassId": None},
-        )
+        return forums.get_forum_thread_content(self, classId, threadId)
 
     def get_forum_thread_comment(
         self, classId: str = None, threadId: str = None
@@ -618,15 +582,4 @@ class bimay:
         forum : dict
             forum information from BinusMaya
         """
-        if classId is None and threadId is None:
-            classId = self.get_forum_latest()["latestPost"][0]["classId"]
-            threadId = self.get_forum_latest()["latestPost"][0]["threadId"]
-        return self.__post_data(
-            f"{self.base_url}/func-bm7-forum-prod/Comment/Paging/1",
-            json_data={
-                "totalDataPerPage": 100,
-                "parentId": threadId,
-                "sortBy": "LatestPost",
-                "forumId": classId,
-            },
-        )
+        return forums.get_forum_thread_comment(self, classId, threadId)

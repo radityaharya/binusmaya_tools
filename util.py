@@ -73,7 +73,12 @@ def toGcalCSV(classSessionDetails):
         Description = f"{url}\n\nSession: {classSessionDetails[i]['sessionNumber']}\n\n"
         for j in range(len(classSessionDetails[i]["courseSubtopic"])):
             Description += " - " + classSessionDetails[i]["courseSubtopic"][j] + "\n"
-
+        
+        if classSessionDetails[i]["location"] == None:
+            location = "Virtual"
+        else:
+            location = classSessionDetails[i]["location"]
+        
         item = {
             "Subject": f"[{classType}] {classSessionDetails[i]['course']}",
             "Start Date": startDate,
@@ -82,7 +87,7 @@ def toGcalCSV(classSessionDetails):
             "End Time": endTime,
             "All Day Event": allDayEvent,
             "Description": Description,
-            "Location": classSessionDetails[i]["classTitle"],
+            "Location": f'{classSessionDetails[i]["classTitle"]} - {location}',
         }
         rows.append(item)
 

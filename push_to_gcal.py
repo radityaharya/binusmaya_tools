@@ -13,7 +13,7 @@ import dotenv
 dotenv.load_dotenv()
 
 CAL_ID = os.getenv("CAL_ID")
-#or "primary" pr "your_gmail@gmail.com"
+#or "primary" or "your_gmail@gmail.com"
 
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
@@ -49,7 +49,14 @@ except:
     print("no cal_ids.json")
 
 
+
 ids = []
+try:
+    with open("gcal_config.json", "r") as f:
+        color_data = json.load(f)
+except:
+    color_data = []
+
 for i in range(len(data)):
 
     startDateTime = data[i]["dateStart"]
@@ -92,16 +99,30 @@ for i in range(len(data)):
     # 11	Tomato  	#d60000
 
     color = ""
-    if "coursename" in data[i]["course"]:
-        color = "5"
-    #add your other courses here
+    course = data[i]["course"]
+    if len(color_data) == 0:
+        color_data.append({"course": course, "color": 1})
+        color = 1
     else:
-        color = "2"
-
+        for j in range(len(color_data)):
+            if color_data[j]["course"] == course:
+                color = color_data[j]["color"]
+                break
+            elif j == len(color_data) - 1:
+                color = len(color_data) + 1
+                color_data.append({"course": course, "color": color})
+                break
+    
+    
     start = {"dateTime": str(startDateTime), "timeZone": "Asia/Jakarta"}
     end = {"dateTime": str(endDateTime), "timeZone": "Asia/Jakarta"}
+    if data[i]["location"] == None:
+        location = "Virtual"
+    else:
+        location = data[i]["location"]
+    
     summary = f"[{classType}] {data[i]['course']}"
-    location = data[i]["classTitle"]
+    location = data[i]["classTitle"] + " - " + location
     description = Description
     colorId = color
 
@@ -120,3 +141,4 @@ for i in range(len(data)):
 
 
 make_json("cal_ids.json", ids)
+make_json("gcal_config.json", color_data)
