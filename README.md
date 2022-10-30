@@ -29,7 +29,6 @@ pip install -r requirements
 ```python
 ROLEID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 TOKEN = "xxxxxxxxxxxxxxxxxx..." 
-# without "Bearer .."
 ```
 
 - Run `schedule_fetcher.py`
@@ -40,17 +39,6 @@ TOKEN = "xxxxxxxxxxxxxxxxxx..."
 - Make sure you have run `schedule_fetcher.py`
 - Follow [this](https://developers.google.com/workspace/guides/create-credentials) guide to obtain your OAuth credentials
 - Input your email or [Calendar ID](https://support.google.com/a/answer/1626902?hl=en) in the `.env` file
-- Configure your courses color in the `push_to_gcal.py`
-
-```python
-color = ""
-    if "coursename" in data[i]["course"]:
-        color = "5"
-    #add your other courses here
-    else:
-        color = "2"
-```
-
 - run `push_to_gcal.py`
 
 **Uploading to notion:**
